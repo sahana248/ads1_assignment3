@@ -29,6 +29,12 @@ def tablefunc(filename):
     return(country_table,year_table)
 
 def create_table(filenames):
+    """
+    This function creates a table by combining data from different datasets,
+    where each dataset has the values of one attribute(as mentioned in filenames)
+    input- filename (list of dataframe names which have different attributes)
+    output- merged table with attribute values for the year 2019
+    """
     for ind,filename in enumerate(filenames):
         filename_table=pd.read_csv(filename+'.csv',skiprows=4)
         filename_table= filename_table[['Country Name','Country Code','2019']]
@@ -44,9 +50,10 @@ def create_table(filenames):
     return merged
     
 def heatmap(table):
+    """
+    This function generates the heatmap for the input table
+    """
     corr= table.corr(method='pearson')
-    print(corr)
-#    corr_matrix = data.corr()
     plt.figure(figsize=(14,12))
     #plotting the heatmap
     sns.heatmap(corr, annot = True);
@@ -55,6 +62,9 @@ def heatmap(table):
 
 
 def scatter_matrix(table):
+    """
+    This function generates the scatter matrix plot for the input table
+    """
     sns.set(style="ticks")
     sns.pairplot(table, hue="IncomeGroup")
     plt.savefig('scatter_matrix')
@@ -84,8 +94,11 @@ def subplots(filenames):
         plt.show()
 
 def norm(array):
-    """ Returns array normalised to [0,1]. Array can be a numpy array
-    or a column of a dataframe"""
+    """ 
+    Returns array normalised to [0,1]. 
+    Array can be a numpy array
+    or a column of a dataframe
+    """
     min_val = np.min(array)
     max_val = np.max(array)
     scaled = (array-min_val) / (max_val-min_val)
@@ -108,9 +121,9 @@ def clustering(x,y):
     # extract columns for fitting
     df_fit = merged[[x,y]].copy()
     # normalise dataframe and inspect result
-    # normalisation is done only on the extract columns. .copy() prevents
-    # changes in df_fit to affect merged. This make the plots with the
-    # original measurements
+    # normalisation is done only on the extract columns.
+    #.copy() prevents changes in df_fit to affect merged.
+    #This make the plots with the original measurements
     df_fit = norm_df(df_fit)
     print(df_fit.describe())
     print()
@@ -129,8 +142,8 @@ def clustering(x,y):
     cen = kmeans.cluster_centers_
     print(cen)
     plt.figure(figsize=(6.0, 6.0))
-    # Individual colours can be assigned to symbols. The label l is used to select the
-    # l-th number from the colour table.
+    # Individual colours can be assigned to symbols. 
+    # The label l is used to select the l-th number from the colour table.
     plt.scatter(df_fit[x], df_fit[y], c=labels, cmap="Accent")
     # colour map Accent selected to increase contrast between colours
     # show cluster centres
