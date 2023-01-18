@@ -2,7 +2,7 @@
 """
 Created on Sat Jan 14 13:02:55 2023
 
-@author: sahan
+@author: sahana muralidaran (21076516)
 """
 
 import pandas as pd
@@ -127,6 +127,7 @@ def clustering(x,y):
     # extract labels and cluster centres
     labels = kmeans.labels_
     cen = kmeans.cluster_centers_
+    print(cen)
     plt.figure(figsize=(6.0, 6.0))
     # Individual colours can be assigned to symbols. The label l is used to select the
     # l-th number from the colour table.
@@ -139,6 +140,7 @@ def clustering(x,y):
     plt.xlabel(x)
     plt.ylabel(y)
     plt.title("cluster")
+    plt.savefig('cluster'+ x + y)
     plt.show()
 
 filenames= ['co2_per_capita','gdp','renew_energy_percent',
@@ -150,5 +152,5 @@ heatmap(merged)
 scatter_matrix(merged)
 subplots(filenames)
 clustering('gdp','under5_mortality')
-
-
+clustering('gdp','renew_energy_percent')
+clustering('renew_energy_percent','under5_mortality')
