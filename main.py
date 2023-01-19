@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on Sat Jan 14 13:02:55 2023
 
@@ -10,9 +11,9 @@ import numpy as np
 import seaborn as sns
 import sklearn.cluster as cluster
 import sklearn.metrics as skmet
-import itertools as itr
 from scipy.optimize import curve_fit
 
+#------------------------------------------------------------------------------
 def tablefunc(filename):
     """
     This function takes the file name as the input and returns two tables
@@ -72,6 +73,15 @@ def scatter_matrix(table):
     plt.show()
 
 def subplots(filenames):
+    """
+    This function creates subplots for 8 different countries.
+    The input for this function contains a list of dataset names, each 
+    representing different attributes.
+    In this program this function runs 7 times since filenames contains a 
+    list of seven different datasets. Also each time the function runs it
+    produces a graph containing 8 subplots for the countries Sudan, Madagascar,
+    India, Bangladesh, Brazil, Mexico, United Arab Emirates and Switzerland.
+    """
     for filename in filenames:
         filename_table=pd.read_csv(filename+'.csv',skiprows=4)
         filename_table=filename_table.dropna(how='all', axis='columns')
@@ -119,6 +129,9 @@ def norm_df(df, first=0, last=None):
     return df
 
 def clustering(x,y):
+    """
+    This function plots 4 clusters and their respective centroids
+    """
     # extract columns for fitting
     df_fit = merged[[x,y]].copy()
     # normalise dataframe and inspect result
@@ -155,32 +168,6 @@ def clustering(x,y):
     plt.savefig('cluster'+ x + y)
     plt.show()
 
-def func(x,a,b,c):
-    """function to calculate the error limits"""
-    return a * np.exp(-(x-b)**2 / c)
-
-def err_ranges(x, func, param, sigma):
-    """
-    Calculates the upper and lower limits for the function, parameters and
-    sigmas for single value or array x. Functions values are calculated for 
-    all combinations of +/- sigma and the minimum and maximum is determined.
-    Can be used for all number of parameters and sigmas >=1.
-    """
-    # initiate arrays for lower and upper limits
-    lower = func(x, *param)
-    upper = lower
-    uplow = []   # list to hold upper and lower limits for parameters
-    for p,s in zip(param, sigma):
-        pmin = p - s
-        pmax = p + s
-        uplow.append((pmin, pmax))  
-    pmix = list(itr.product(*uplow))
-    for p in pmix:
-        y = func(x, *p)
-        lower = np.minimum(lower, y)
-        upper = np.maximum(upper, y) 
-    return lower, upper
-
 def expoFunc(x,a,b):
     """exponential function"""
     return a**(x+b)
@@ -195,6 +182,7 @@ def curvefit(filename):
              '2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020']
     df=df[columns]
     years= [val for val in columns if val.isdigit()]
+    #taking only the data for Bangladesh
     df=df.loc[df['Country Name'] == 'Bangladesh']
     plt.figure(figsize=(8, 6))
     plt.scatter(years,df[years].values[0])
@@ -203,6 +191,7 @@ def curvefit(filename):
     plt.xlabel('years')
     plt.xticks(rotation=45.0)
     plt.show()
+    #converting the years into integer to facilitate calculations
     x_data=[]
     for i in years:
         x_data.append(int(i))
@@ -210,7 +199,7 @@ def curvefit(filename):
     popt, pcov = curve_fit(expoFunc,x_data,y_data,p0=[1,0])
     a_opt, b_opt = popt
     y_mod = expoFunc(x_data,a_opt,b_opt)
-    '''plot for scattering after fitting the curve'''
+    #plot for scattering after fitting the curve
     plt.figure(figsize=(8, 6))
     plt.scatter(years,y_data)
     plt.plot(years,y_mod,color = 'r')
@@ -235,7 +224,9 @@ def error_range(filename):
                  '2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020']
     df=df[columns]
     years= [val for val in columns if val.isdigit()]
+    #taking only the data for Bangladesh
     df=df.loc[df['Country Name'] == 'Bangladesh']
+    #converting the years into integer to facilitate calculations
     x_data=[]
     for i in years:
         x_data.append(int(i))
@@ -246,6 +237,7 @@ def error_range(filename):
     y_mod = expoFunc(x_data,a_opt,b_opt)
     lower=expoFunc(x_data, a_opt-da, b_opt-db)
     upper=expoFunc(x_data, a_opt+da, b_opt+db)
+    #plotting the curve fit along with confidence range
     plt.figure(figsize=(8, 6))
     plt.scatter(years,y_data)
     plt.plot(years, y_mod, 'r', label='Best fit')
@@ -257,6 +249,8 @@ def error_range(filename):
     plt.legend()
     plt.savefig("confidence.png")
     plt.show()
+    #creating new dataframe new_df containing future year values, predicted
+    #GDP values, lower error limit and upper error limit.
     new_df = pd.DataFrame()
     future_x = [2025,2030,2035,2040]
     future_y = expoFunc(future_x,a_opt,b_opt)
@@ -267,6 +261,8 @@ def error_range(filename):
     new_df['Lower error limit']=future_lower
     new_df['upper error limit']=future_upper
     print(new_df)
+
+#------------------------------------------------------------------------------
 
 filenames= ['co2_per_capita','gdp','renew_energy_percent',
             'under5_mortality','unemployment','urban_population',
