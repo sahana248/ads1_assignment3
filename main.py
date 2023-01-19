@@ -12,6 +12,7 @@ import seaborn as sns
 import sklearn.cluster as cluster
 import sklearn.metrics as skmet
 import itertools as itr
+from scipy.optimize import curve_fit
 
 def tablefunc(filename):
     """
@@ -183,6 +184,40 @@ def err_ranges(x, func, param, sigma):
         upper = np.maximum(upper, y) 
     return lower, upper
 
+def expoFunc(x,a,b):
+    """exponential function"""
+    return a**(x+b)
+
+def curvefit(filename):
+    df= pd.read_csv(filename,skiprows=4)
+    columns=['Country Name','2000','2001','2002','2003','2004','2005','2006','2007','2008','2009',
+             '2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020']
+    df=df[columns]
+    years= [val for val in columns if val.isdigit()]
+    df=df.loc[df['Country Name'] == 'Bangladesh']
+    plt.scatter(years,df[years].values[0])
+    plt.title('Scatter plot before curve fitting')
+    plt.ylabel('gdp')
+    plt.xlabel('years')
+    plt.xticks(rotation=45.0)
+    plt.show()
+    x_data=[]
+    for i in years:
+        x_data.append(int(i))
+    y_data = df[years].values[0]
+    popt, pcov = curve_fit(expoFunc,x_data,y_data,p0=[1,0])
+    a_opt, b_opt = popt
+    y_mod = expoFunc(x_data,a_opt,b_opt)
+    '''plot for scattering after fitting the curve'''
+    plt.scatter(years,y_data)
+    plt.plot(years,y_mod,color = 'r')
+    plt.title('Bangladesh-GDP curve fitting')
+    plt.ylabel('gdp')
+    plt.xlabel('years')
+    plt.xticks(rotation=45.0)
+    plt.savefig("curvefit.png")
+    plt.show()
+
 filenames= ['co2_per_capita','gdp','renew_energy_percent',
             'under5_mortality','unemployment','urban_population',
             'access_electricity']
@@ -194,3 +229,4 @@ subplots(filenames)
 clustering('gdp','under5_mortality')
 clustering('gdp','renew_energy_percent')
 clustering('renew_energy_percent','under5_mortality')
+curvefit('gdp.csv')
