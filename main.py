@@ -13,6 +13,7 @@ import sklearn.cluster as cluster
 import sklearn.metrics as skmet
 import itertools as itr
 from scipy.optimize import curve_fit
+from scipy.stats import linregress
 
 def tablefunc(filename):
     """
@@ -189,6 +190,11 @@ def expoFunc(x,a,b):
     return a**(x+b)
 
 def curvefit(filename):
+    """
+    This function takes the input as a filename (gdp.csv) and returns the 
+    scatter plot before and after curve fitting. Also this will give a 
+    scatter plot with curve fitting and confidence range of 95%
+    """
     df= pd.read_csv(filename,skiprows=4)
     columns=['Country Name','2000','2001','2002','2003','2004','2005','2006','2007','2008','2009',
              '2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020']
@@ -216,6 +222,20 @@ def curvefit(filename):
     plt.xlabel('years')
     plt.xticks(rotation=45.0)
     plt.savefig("curvefit.png")
+    plt.show()
+    slope, intercept, r_value, p_value, std_err = linregress(x_data, y_data)
+    prediction_interval = 1.96*std_err
+    lower = y_mod - prediction_interval
+    upper = y_mod + prediction_interval
+    plt.scatter(years,y_data)
+    plt.plot(years, y_mod, 'r', label='Best fit')
+    plt.fill_between(years, lower, upper, color='gray', alpha=0.5, label='95% Confidence Interval')
+    plt.title('Curve fitting (GDP-Bangladesh) with 95% confidence range')
+    plt.ylabel('gdp')
+    plt.xlabel('years')
+    plt.xticks(rotation=45.0)
+    plt.legend()
+    plt.savefig("confi_95.png")
     plt.show()
 
 filenames= ['co2_per_capita','gdp','renew_energy_percent',
