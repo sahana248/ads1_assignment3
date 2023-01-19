@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Sat Jan 14 13:02:55 2023
 
@@ -13,7 +12,6 @@ import sklearn.cluster as cluster
 import sklearn.metrics as skmet
 import itertools as itr
 from scipy.optimize import curve_fit
-from scipy.stats import linregress
 
 def tablefunc(filename):
     """
@@ -128,8 +126,6 @@ def clustering(x,y):
     #.copy() prevents changes in df_fit to affect merged.
     #This make the plots with the original measurements
     df_fit = norm_df(df_fit)
-    print(df_fit.describe())
-    print()
     for ic in range(2, 7):
     # set up kmeans and fit
         kmeans = cluster.KMeans(n_clusters=ic)
@@ -192,8 +188,7 @@ def expoFunc(x,a,b):
 def curvefit(filename):
     """
     This function takes the input as a filename (gdp.csv) and returns the 
-    scatter plot before and after curve fitting. Also this will give a 
-    scatter plot with curve fitting and confidence range of 95%
+    scatter plot before and after curve fitting. 
     """
     df= pd.read_csv(filename,skiprows=4)
     columns=['Country Name','2000','2001','2002','2003','2004','2005','2006','2007','2008','2009',
@@ -201,6 +196,7 @@ def curvefit(filename):
     df=df[columns]
     years= [val for val in columns if val.isdigit()]
     df=df.loc[df['Country Name'] == 'Bangladesh']
+    plt.figure(figsize=(8, 6))
     plt.scatter(years,df[years].values[0])
     plt.title('Scatter plot before curve fitting')
     plt.ylabel('gdp')
@@ -215,6 +211,7 @@ def curvefit(filename):
     a_opt, b_opt = popt
     y_mod = expoFunc(x_data,a_opt,b_opt)
     '''plot for scattering after fitting the curve'''
+    plt.figure(figsize=(8, 6))
     plt.scatter(years,y_data)
     plt.plot(years,y_mod,color = 'r')
     plt.title('Bangladesh-GDP curve fitting')
@@ -223,26 +220,58 @@ def curvefit(filename):
     plt.xticks(rotation=45.0)
     plt.savefig("curvefit.png")
     plt.show()
-    slope, intercept, r_value, p_value, std_err = linregress(x_data, y_data)
-    prediction_interval = 1.96*std_err
-    lower = y_mod - prediction_interval
-    upper = y_mod + prediction_interval
+
+    
+def error_range(filename):
+    """
+    This function will give a scatter plot with curve fitting and
+    confidence range.
+    Also this function produces and prints a new dataframe which consists 
+    of predicted GDP values for future years, along with their respective
+    lower and upper limit.
+    """
+    df= pd.read_csv(filename,skiprows=4)
+    columns=['Country Name','2000','2001','2002','2003','2004','2005','2006','2007','2008','2009',
+                 '2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020']
+    df=df[columns]
+    years= [val for val in columns if val.isdigit()]
+    df=df.loc[df['Country Name'] == 'Bangladesh']
+    x_data=[]
+    for i in years:
+        x_data.append(int(i))
+    y_data = df[years].values[0]
+    popt, pcov = curve_fit(expoFunc,x_data,y_data,p0=[1,0])
+    a_opt, b_opt = popt
+    da, db = np.sqrt(np.diag(pcov))
+    y_mod = expoFunc(x_data,a_opt,b_opt)
+    lower=expoFunc(x_data, a_opt-da, b_opt-db)
+    upper=expoFunc(x_data, a_opt+da, b_opt+db)
+    plt.figure(figsize=(8, 6))
     plt.scatter(years,y_data)
     plt.plot(years, y_mod, 'r', label='Best fit')
-    plt.fill_between(years, lower, upper, color='gray', alpha=0.5, label='95% Confidence Interval')
-    plt.title('Curve fitting (GDP-Bangladesh) with 95% confidence range')
+    plt.fill_between(years, lower, upper, color='gray', alpha=0.5, label='Confidence Interval')
+    plt.title('Curve fitting (GDP-Bangladesh) with confidence range')
     plt.ylabel('gdp')
     plt.xlabel('years')
     plt.xticks(rotation=45.0)
     plt.legend()
-    plt.savefig("confi_95.png")
+    plt.savefig("confidence.png")
     plt.show()
+    new_df = pd.DataFrame()
+    future_x = [2025,2030,2035,2040]
+    future_y = expoFunc(future_x,a_opt,b_opt)
+    future_lower=expoFunc(future_x, a_opt-da, b_opt-db)
+    future_upper=expoFunc(future_x, a_opt+da, b_opt+db)
+    new_df['Year']= future_x
+    new_df['predicted GDP']= future_y
+    new_df['Lower error limit']=future_lower
+    new_df['upper error limit']=future_upper
+    print(new_df)
 
 filenames= ['co2_per_capita','gdp','renew_energy_percent',
             'under5_mortality','unemployment','urban_population',
             'access_electricity']
 merged= create_table(filenames)
-print(merged)
 heatmap(merged)
 scatter_matrix(merged)
 subplots(filenames)
@@ -250,3 +279,4 @@ clustering('gdp','under5_mortality')
 clustering('gdp','renew_energy_percent')
 clustering('renew_energy_percent','under5_mortality')
 curvefit('gdp.csv')
+error_range('gdp.csv')
